@@ -54,19 +54,69 @@ class Blockchain:
     
     def is_chain_valid(self, chain):
         previous_block = chain[0]
-        block_index 1
+        block_index = 1
         while block_index < len(chain):
-            block = chain[block_index]:
+            block = chain[block_index]
             if block['previous_hash'] != self.hash(previous_block):
                 return False
             previous_proof = previous_block['proof']
             proof = block['proof']
             hash_operation = hashlib.sha256(str(proof**2 - previous_block**2).encode()).hexdigest()
             if hash_operation[:4] != '0000':
-                reurn False
+                return False
             previous_block = block
             block_index += 1
         return True 
+
+# PArte 2 - Minado de un Bloque de la cadena
+
+#Crear una aplicación web
+app = Flask(__name__)
+# Si obtiene un error 500, actualizar flask, reiniciar spyder y ejecutar la siguiente linea
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
+
+#Crear una Blockchain
+blockchain = Blockchain()
+
+#Minar un nuevo Bloque
+@app.route('/mine_block', methods=['GET'])
+def mine_block():
+    previous_block = blockchain.get_previous_block()
+    previous_proof = previous_block['proof']
+    proof = blockchain.proof_of_word(previous_proof)
+    previous_hash = blockchain.hash(previous_block)
+    block = blockchain.create_block(proof, previous_hash)
+    response = {'message' : '¡Felicidades, minaste un nuevo bloque',
+                'index' : block['index'],
+                'timestamp' : block['timestamp'],
+                'proof' : block['proof'],
+                'previous_hash' : block['previous_hash']}
+    return jsonify(response), 200
+
+# Obtener la cadena de bloques al completo
+
+@app.route('/get_chain', methods=['GET'])
+def get_chain():
+    response = {'chain' : blockchain.chain,
+                'length' : len(blockchain.chain)}
+    return jsonify(response), 200
+
+# Comprobar si la cadena de bloques es valida 
+@app.route('/is_valid', methods=['GET'])
+def is_valid():
+    is_valid = blockchain.is_chain_valid(blockchain.chain)
+    if is_valid:
+        response = {'message' : 'Todo correcto. La cadena de bloques es válida.'}
+    else:
+        response = {'message' : 'Houston, tenemos un problema. La cadena de bloques no es válida.'}
+    return jsonify(response), 200 
+    
+# Ejecutar la app
+app.run(host = '0.0.0.0', port = 5000)
+
+
+
+
     
         
         
